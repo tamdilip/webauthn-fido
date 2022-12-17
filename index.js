@@ -1,13 +1,9 @@
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
+const http = require('http');
+const requestListener = require('./api/listener');
 
-app.use(express.static('public'));
+const SERVER_PORT = process.env.PORT || 3000;
 
-app.get('/api', (req, res) => {
-    res.send('Hello World!');
-});
-
-app.listen(port, () => {
-    console.log(`App listening on port ${port}`);
+const server = http.createServer(requestListener);
+server.listen(SERVER_PORT, () => {
+    console.log(`Server running on port ${SERVER_PORT} : http://localhost:${SERVER_PORT}`);
 });
