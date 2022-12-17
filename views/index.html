@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+    <title>WebAuthn FIDO</title>
+
+    <style>
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="registration">
+        <input type="text" id="username" placeholder="Username"><br>
+        <input type="email" id="useremail" placeholder="Email address"><br><br>
+        <button id="regBtn" onclick="onRegister()">Register</button>
+    </div>
+    <div class="authentication">
+        <button id="signInBtn" onclick="onSignIn()">Sign In</button>
+    </div>
+    <div class="home">
+        <p>Welcome <span id="signedUser"></span></p><br>
+        <button id="signOutBtn" onclick="onSignOut()">Sign Out</button>
+    </div>
+
+    <script>
+        const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        let lookup = new Uint8Array(256);
+        for (let i = 0; i < CHARS.length; i++) {
+            lookup[CHARS.charCodeAt(i)] = i;
+        }
+        const base64URLDecode = function (base64) {
+            let bufferLength = base64.length * 0.75,
+                len = base64.length, i, p = 0,
+                encoded1, encoded2, encoded3, encoded4;
+
+            let arraybuffer = new ArrayBuffer(bufferLength),
+                bytes = new Uint8Array(arraybuffer);
+
+            for (i = 0; i < len; i += 4) {
+                encoded1 = lookup[base64.charCodeAt(i)];
+                encoded2 = lookup[base64.charCodeAt(i + 1)];
+                encoded3 = lookup[base64.charCodeAt(i + 2)];
+                encoded4 = lookup[base64.charCodeAt(i + 3)];
+
+                bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+                bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+                bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+            }
+
+            return arraybuffer;
+        };
+
+        const AUTH_TIMEOUT = 60000;
+        const ATTESTATION = 'direct';
+        const KEY_TYPE = 'public-key';
+        const AUTH_ATTACH = 'platform';
+        const APP_HOST = location.host;
+        const APP_NAME = 'WebAuthn FIDO';
+        const DOM_ID = id => document.getElementById(id);
+        const DOM_CLASS = cl => document.getElementsByClassName(cl)?.[0];
+        const getChallenge = (key = `${new Date().getTime()}`) => Uint8Array.from(key, c => c.charCodeAt(0));
+
+        DOM_CLASS('authentication').style.display = 'none';
+        DOM_CLASS('home').style.display = 'none';
+
+        let createdUser, userInfo;
+        const onRegister = async () => {
+            const username = DOM_ID('username').value;
+            const useremail = DOM_ID('useremail').value;
+
+            userInfo = {
+                name: useremail,
+                displayName: username,
+                id: getChallenge(username)
+            };
+
+            const publicKeyCredentialCreationOptions = {
+                user: userInfo,
+                timeout: AUTH_TIMEOUT,
+                attestation: ATTESTATION,
+                challenge: getChallenge(),
+                rp: { id: APP_HOST, name: APP_NAME },
+                pubKeyCredParams: [{ alg: -7, type: KEY_TYPE }],
+                authenticatorSelection: { authenticatorAttachment: AUTH_ATTACH }
+            };
+            const authCreate = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+
+            createdUser = authCreate;
+            DOM_CLASS('registration').style.display = 'none';
+            DOM_CLASS('authentication').style.display = 'block';
+        };
+
+        const onSignIn = async () => {
+            const credentialRequestOptions = {
+                rpId: APP_HOST,
+                timeout: AUTH_TIMEOUT,
+                challenge: getChallenge(),
+                userVerification: 'required',
+                allowCredentials: [{ id: base64URLDecode(createdUser.id), type: KEY_TYPE }]
+            };
+            await navigator.credentials.get({ publicKey: credentialRequestOptions });
+
+            DOM_CLASS('authentication').style.display = 'none';
+            DOM_CLASS('home').style.display = 'block';
+            DOM_ID('signedUser').innerHTML = userInfo.name;
+        };
+
+        const onSignOut = () => {
+            location.reload();
+        };
+
+    </script>
+
+</body>
+
+</html>
