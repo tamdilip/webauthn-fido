@@ -8,45 +8,105 @@ const DOM_ID = id => document.getElementById(id);
 const DOM_CLASS = cl => document.getElementsByClassName(cl)?.[0];
 const getChallenge = (key = `${new Date().getTime()}`) => Uint8Array.from(key, c => c.charCodeAt(0));
 
+const resetOverlay = () => {
+    DOM_CLASS('overlay').style.display = 'none';
+    DOM_CLASS('overlay-spinner').style.display = 'none';
+    DOM_CLASS('overlay-error').style.display = 'none';
+    DOM_CLASS('overlay-success').style.display = 'none';
+    DOM_CLASS('overlay-label').style.display = 'none';
+    DOM_CLASS('overlay-label').innerHTML = 'Loading...';
+};
+
+const showSuccessOverlay = label => {
+    DOM_CLASS('overlay').style.display = 'block';
+    DOM_CLASS('overlay-spinner').style.display = 'none';
+    DOM_CLASS('overlay-error').style.display = 'none';
+    DOM_CLASS('overlay-success').style.display = 'block';
+    DOM_CLASS('overlay-label').style.display = 'block';
+    DOM_CLASS('overlay-label').innerHTML = label || 'Success !';
+
+    setTimeout(() => {
+        resetOverlay();
+    }, 3000);
+};
+
+const showErrorOverlay = label => {
+    DOM_CLASS('overlay').style.display = 'block';
+    DOM_CLASS('overlay-spinner').style.display = 'none';
+    DOM_CLASS('overlay-error').style.display = 'block';
+    DOM_CLASS('overlay-success').style.display = 'none';
+    DOM_CLASS('overlay-label').style.display = 'block';
+    DOM_CLASS('overlay-label').innerHTML = label || 'Failed !';
+
+    setTimeout(() => {
+        resetOverlay();
+    }, 3000);
+};
+
+const showLoadingOverlay = label => {
+    DOM_CLASS('overlay').style.display = 'block';
+    DOM_CLASS('overlay-spinner').style.display = 'block';
+    DOM_CLASS('overlay-error').style.display = 'none';
+    DOM_CLASS('overlay-success').style.display = 'none';
+    DOM_CLASS('overlay-label').style.display = 'block';
+    DOM_CLASS('overlay-label').innerHTML = label || 'Loading...';
+};
+
 DOM_CLASS('home').style.display = 'none';
+resetOverlay();
+
+const promisyFetch = (method, url, data) =>
+    new Promise((res, rej) => {
+        const reqOpt = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        };
+        fetch(url, reqOpt)
+            .then((response) => response.ok ? response.json() : rej(response))
+            .then(res)
+            .catch(rej);
+    });
 
 let createdUser, userInfo;
 const onRegister = async () => {
-    const username = DOM_ID('username').value;
+    try {
+        showLoadingOverlay('Registering...');
 
-    userInfo = {
-        name: username,
-        displayName: username,
-        id: getChallenge(username)
-    };
+        const username = DOM_ID('username').value;
+        const publicKey = await promisyFetch('POST', '/register-request', { username });
+        publicKey.user.id = getChallenge(username);
+        publicKey.challenge = getChallenge();
+        const authCreate = await navigator.credentials.create({ publicKey });
 
-    const publicKeyCredentialCreationOptions = {
-        user: userInfo,
-        timeout: AUTH_TIMEOUT,
-        attestation: ATTESTATION,
-        challenge: getChallenge(),
-        rp: { id: APP_HOST, name: APP_NAME },
-        pubKeyCredParams: [{ alg: -7, type: KEY_TYPE }],
-        authenticatorSelection: { authenticatorAttachment: AUTH_ATTACH }
-    };
-    const authCreate = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
-
-    createdUser = authCreate;
+        createdUser = authCreate;
+        showSuccessOverlay('Registered !');
+    } catch (error) {
+        console.log(error);
+        showErrorOverlay(error?.status === 409 ? 'Username already exists !' : 'Error registering !');
+    }
 };
 
 const onSignIn = async () => {
-    const credentialRequestOptions = {
-        rpId: APP_HOST,
-        timeout: AUTH_TIMEOUT,
-        challenge: getChallenge(),
-        userVerification: 'required',
-        allowCredentials: [{ id: base64URLDecode(createdUser.id), type: KEY_TYPE }]
-    };
-    await navigator.credentials.get({ publicKey: credentialRequestOptions });
+    try {
+        showLoadingOverlay('Signing in...');
 
-    DOM_CLASS('authentication').style.display = 'none';
-    DOM_CLASS('home').style.display = 'block';
-    DOM_ID('signedUser').innerHTML = userInfo.name;
+        const credentialRequestOptions = {
+            rpId: APP_HOST,
+            timeout: AUTH_TIMEOUT,
+            challenge: getChallenge(),
+            userVerification: 'required',
+            allowCredentials: [{ id: base64URLDecode(createdUser.id), type: KEY_TYPE }]
+        };
+        await navigator.credentials.get({ publicKey: credentialRequestOptions });
+
+        showSuccessOverlay('Signed in !');
+        DOM_CLASS('authentication').style.display = 'none';
+        DOM_CLASS('home').style.display = 'block';
+        DOM_ID('signedUser').innerHTML = createdUser.id;
+    } catch (error) {
+        showErrorOverlay('Error signing in !');
+    }
 };
 
 const onSignOut = () => {

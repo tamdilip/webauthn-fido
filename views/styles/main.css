@@ -2,6 +2,10 @@ body {
     background: #0c0c14;
 }
 
+.text-white {
+    color: white;
+}
+
 .fidco-container {
     padding: 15px;
     position: absolute;
@@ -45,8 +49,7 @@ button[type=submit]:hover {
     padding-left: 5px;
 }
 
-
-#overlay {
+.overlay {
     background: #000000;
     color: #ffdfdf;
     position: fixed;
@@ -58,10 +61,10 @@ button[type=submit]:hover {
     float: left;
     text-align: center;
     padding-top: 25%;
-    opacity: .80;
+    opacity: .85;
 }
 
-.spinner {
+.overlay-spinner {
     margin: 0 auto;
     height: 64px;
     width: 64px;
