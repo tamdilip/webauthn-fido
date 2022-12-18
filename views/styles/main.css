@@ -1,44 +1,69 @@
 body {
     background: #0c0c14;
+    font-family: Arial, sans-serif;
 }
 
 .text-white {
     color: white;
 }
 
+.text-center {
+    text-align: center;
+}
+
+.d-none {
+    display: none;
+}
+
+.mt-0 {
+    margin-top: 0;
+}
+
+.mb-p3 {
+    margin-bottom: 0.3em;
+}
+
+.mt-2 {
+    margin-top: 2em;
+}
+
 .fidco-container {
-    padding: 15px;
-    position: absolute;
     top: 50%;
     left: 50%;
+    padding: 15px;
+    position: absolute;
     text-align: center;
-    -ms-transform: translateX(-50%) translateY(-50%);
-    -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translateX(-50%) translateY(-50%);
+}
+
+.header {
+    width: min-content;
 }
 
 input[type=text] {
-    text-align: center;
-    padding: 12px 20px;
     margin: 8px 0;
+    text-align: center;
+    border-radius: 5px;
+    padding: 12px 20px;
     display: inline-block;
     border: 5px solid #45e587;
-    border-radius: 5px;
 }
 
 button[type=submit] {
     width: 100%;
-    display: inline-flex;
-    align-items: center;
-    background-color: #4CAF50;
-    color: white;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 30%;
-    margin: 8px 0;
     border: none;
-    border-radius: 4px;
+    margin: 8px 0;
+    color: white;
     cursor: pointer;
+    padding-top: 10px;
+    padding-left: 30%;
+    border-radius: 4px;
+    align-items: center;
+    display: inline-flex;
+    padding-bottom: 10px;
+    background-color: #4CAF50;
 }
 
 button[type=submit]:hover {
@@ -49,29 +74,33 @@ button[type=submit]:hover {
     padding-left: 5px;
 }
 
+#signOutBtn {
+    padding-left: 10%;
+}
+
 .overlay {
-    background: #000000;
-    color: #ffdfdf;
-    position: fixed;
-    height: 100%;
-    width: 100%;
-    z-index: 5000;
     top: 0;
     left: 0;
+    width: 100%;
     float: left;
-    text-align: center;
-    padding-top: 25%;
     opacity: .85;
+    height: 100%;
+    z-index: 5000;
+    position: fixed;
+    color: #ffdfdf;
+    padding-top: 25%;
+    text-align: center;
+    background: #000000;
 }
 
 .overlay-spinner {
-    margin: 0 auto;
-    height: 64px;
     width: 64px;
-    animation: rotate 2s infinite linear;
+    height: 64px;
+    margin: 0 auto;
+    border-radius: 50%;
     border: 10px dotted #22b22c;
     border-right-color: transparent;
-    border-radius: 50%;
+    animation: rotate 2s infinite linear;
 }
 
 @keyframes rotate {

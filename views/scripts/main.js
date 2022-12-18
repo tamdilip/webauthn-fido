@@ -1,9 +1,3 @@
-const AUTH_TIMEOUT = 60000;
-const ATTESTATION = 'direct';
-const KEY_TYPE = 'public-key';
-const AUTH_ATTACH = 'platform';
-const APP_HOST = location.host;
-const APP_NAME = 'WebAuthn FIDO';
 const DOM_ID = id => document.getElementById(id);
 const DOM_CLASS = cl => document.getElementsByClassName(cl)?.[0];
 const getChallenge = (key = `${new Date().getTime()}`) => Uint8Array.from(key, c => c.charCodeAt(0));
@@ -16,8 +10,9 @@ const resetOverlay = () => {
     DOM_CLASS('overlay-label').style.display = 'none';
     DOM_CLASS('overlay-label').innerHTML = 'Loading...';
 };
+resetOverlay();
 
-const showSuccessOverlay = label => {
+const showSuccessOverlay = (label, disable = true) => {
     DOM_CLASS('overlay').style.display = 'block';
     DOM_CLASS('overlay-spinner').style.display = 'none';
     DOM_CLASS('overlay-error').style.display = 'none';
@@ -25,12 +20,13 @@ const showSuccessOverlay = label => {
     DOM_CLASS('overlay-label').style.display = 'block';
     DOM_CLASS('overlay-label').innerHTML = label || 'Success !';
 
-    setTimeout(() => {
-        resetOverlay();
-    }, 3000);
+    if (disable)
+        setTimeout(() => {
+            resetOverlay();
+        }, 3000);
 };
 
-const showErrorOverlay = label => {
+const showErrorOverlay = (label, disable = true) => {
     DOM_CLASS('overlay').style.display = 'block';
     DOM_CLASS('overlay-spinner').style.display = 'none';
     DOM_CLASS('overlay-error').style.display = 'block';
@@ -38,9 +34,10 @@ const showErrorOverlay = label => {
     DOM_CLASS('overlay-label').style.display = 'block';
     DOM_CLASS('overlay-label').innerHTML = label || 'Failed !';
 
-    setTimeout(() => {
-        resetOverlay();
-    }, 3000);
+    if (disable)
+        setTimeout(() => {
+            resetOverlay();
+        }, 3000);
 };
 
 const showLoadingOverlay = label => {
@@ -52,8 +49,7 @@ const showLoadingOverlay = label => {
     DOM_CLASS('overlay-label').innerHTML = label || 'Loading...';
 };
 
-DOM_CLASS('home').style.display = 'none';
-resetOverlay();
+if (!window.PublicKeyCredential) showErrorOverlay('WebAuthn not supported in this browser !', false);
 
 const promisyFetch = (method, url, data) =>
     new Promise((res, rej) => {
@@ -63,12 +59,11 @@ const promisyFetch = (method, url, data) =>
             body: JSON.stringify(data)
         };
         fetch(url, reqOpt)
-            .then((response) => response.ok ? response.json() : rej(response))
+            .then(response => response.ok ? response.json() : rej(response))
             .then(res)
             .catch(rej);
     });
 
-let createdUser, userInfo;
 const onRegister = async () => {
     try {
         showLoadingOverlay('Registering...');
@@ -77,12 +72,11 @@ const onRegister = async () => {
         const publicKey = await promisyFetch('POST', '/register-request', { username });
         publicKey.user.id = getChallenge(username);
         publicKey.challenge = getChallenge();
-        const authCreate = await navigator.credentials.create({ publicKey });
+        const registeredResponse = await navigator.credentials.create({ publicKey });
+        await promisyFetch('POST', '/register-response', { username, id: registeredResponse.id });
 
-        createdUser = authCreate;
         showSuccessOverlay('Registered !');
     } catch (error) {
-        console.log(error);
         showErrorOverlay(error?.status === 409 ? 'Username already exists !' : 'Error registering !');
     }
 };
@@ -91,19 +85,20 @@ const onSignIn = async () => {
     try {
         showLoadingOverlay('Signing in...');
 
-        const credentialRequestOptions = {
-            rpId: APP_HOST,
-            timeout: AUTH_TIMEOUT,
-            challenge: getChallenge(),
-            userVerification: 'required',
-            allowCredentials: [{ id: base64URLDecode(createdUser.id), type: KEY_TYPE }]
-        };
-        await navigator.credentials.get({ publicKey: credentialRequestOptions });
+        const username = DOM_ID('username').value;
+        const publicKey = await promisyFetch('POST', '/login-request', { username });
+        publicKey.challenge = getChallenge();
+        const userId = publicKey.allowCredentials[0].id;
+        publicKey.allowCredentials[0].id = base64URLDecode(userId);
+
+        await navigator.credentials.get({ publicKey });
 
         showSuccessOverlay('Signed in !');
+
         DOM_CLASS('authentication').style.display = 'none';
         DOM_CLASS('home').style.display = 'block';
-        DOM_ID('signedUser').innerHTML = createdUser.id;
+        DOM_ID('signedUser').innerHTML = username;
+        //DOM_ID('userId').innerHTML = userId;
     } catch (error) {
         showErrorOverlay('Error signing in !');
     }
