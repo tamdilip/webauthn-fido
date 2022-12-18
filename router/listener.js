@@ -3,9 +3,9 @@ const app = express();
 
 const port = process.env.PORT || 3000;
 
-app.use(express.static('views'));
+app.use(express.static('ui'));
 
-app.get('/api', (req, res) => {
+app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
