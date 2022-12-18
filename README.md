@@ -17,4 +17,8 @@ The local setup has in-memory nodejs database, for prototype work.
         $ Hit http://localhost:3000/
 ```
 
+### Snapshots
+![login](https://user-images.githubusercontent.com/11086311/208306504-5361e9a6-a6ea-4d41-8c6f-57d4556ed7d6.png)
+
+
 **Happy coding :) !!**
