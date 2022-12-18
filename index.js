@@ -1,7 +1,6 @@
 const http = require('http');
-const requestListener = require('./api/listener');
-
-const SERVER_PORT = process.env.PORT || 3000;
+const { SERVER_PORT } = require('./config/env');
+const { requestListener } = require('./router/listener');
 
 const server = http.createServer(requestListener);
 server.listen(SERVER_PORT, () => {

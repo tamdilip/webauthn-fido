@@ -1,7 +1,7 @@
 {
   "name": "webauthn",
   "version": "1.0.0",
-  "description": "",
+  "description": "Sample app to demonstrate password less authentication via native devices biometric options.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -18,8 +18,6 @@
     "url": "https://github.com/tamdilip/webauthn/issues"
   },
   "homepage": "https://github.com/tamdilip/webauthn#readme",
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
