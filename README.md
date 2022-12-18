@@ -1,6 +1,6 @@
 # 🔒 WebAuthn FIDO
 
-[![Live demo](https://img.shields.io/badge/Render-Live%20demo-violet?style=flat-square&logo=render&logoColor=violet)](https://webauthn.onrender.com/)
+[![Live demo](https://img.shields.io/badge/Render-Live%20demo-violet?style=flat-square&logo=render&logoColor=violet)](https://webauthn-fido.onrender.com)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod&style=flat-square)](https://gitpod.io/#https://github.com/tamdilip/webauthn-fido) 
 
 A minimal app to demonstrate password less authentication leveraging native devices biometric options like Touch ID with WebAuthn (Web Authentication API) following FIDO (Fast IDentity Online) web standards.
